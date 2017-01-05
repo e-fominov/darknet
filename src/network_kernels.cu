@@ -42,9 +42,11 @@ float * get_network_output_gpu(network net);
 
 void forward_network_gpu(network net, network_state state)
 {
+    clock_t time;
     state.workspace = net.workspace;
     int i;
     for(i = 0; i < net.n; ++i){
+        time=clock();
         state.index = i;
         layer l = net.layers[i];
         if(l.delta_gpu){
@@ -52,6 +54,7 @@ void forward_network_gpu(network net, network_state state)
         }
         l.forward_gpu(l, state);
         state.input = l.output_gpu;
+        printf("Layer %d time %f seconds.\n", i, sec(clock()-time));
     }
 }
 
