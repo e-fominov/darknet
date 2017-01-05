@@ -146,7 +146,9 @@ void forward_network(network net, network_state state)
 {
     state.workspace = net.workspace;
     int i;
+    clock_t time;
     for(i = 0; i < net.n; ++i){
+        time=clock();
         state.index = i;
         layer l = net.layers[i];
         if(l.delta){
@@ -154,6 +156,7 @@ void forward_network(network net, network_state state)
         }
         l.forward(l, state);
         state.input = l.output;
+        printf("Layer %d time %f seconds.\n", i, sec(clock()-time));
     }
 }
 
