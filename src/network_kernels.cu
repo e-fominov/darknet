@@ -52,9 +52,10 @@ void forward_network_gpu(network net, network_state state)
         if(l.delta_gpu){
             fill_ongpu(l.outputs * l.batch, 0, l.delta_gpu, 1);
         }
-        l.forward_gpu(l, state);
+        for (int k = 0; k < 100; ++k)    
+            l.forward_gpu(l, state);
         state.input = l.output_gpu;
-        printf("Layer %d time %f seconds.\n", i, sec(clock()-time));
+        printf("Layer %d time %f seconds.\n", i, sec(clock()-time) / 100);
     }
 }
 

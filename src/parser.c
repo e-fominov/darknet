@@ -1078,3 +1078,60 @@ void load_weights(network *net, char *filename)
     load_weights_upto(net, filename, net->n);
 }
 
+void save_layer_weight_stats(FILE* f, float* weights, size_t weight_count)
+{
+    static const float weight_min = -.2;
+    static const float weight_max = .2;
+    static const float weight_step = 0.01;
+    static const size_t weight_stat_count = (size_t)((weight_max - weight_min) / weight_step + 1);
+
+    size_t stats[weight_stat_count];
+    for (size_t i = 0; i < weight_stat_count; ++i)
+        stats[i] = 0;
+
+    // calculate histogram through all weights
+    for (int i = 0; i < weight_count; ++i)
+    {
+        float w = *weights++;
+        if (w < weight_min) w = weight_min;
+        else if (w > weight_max) w = weight_max;
+        w -= weight_min;
+        w /= weight_step;
+        size_t pos = (size_t)w;
+        stats[pos]++;
+    }
+    for (size_t i = 0; i < weight_stat_count; ++i)
+    {
+        float w = i * weight_step + weight_min;
+        size_t st = stats[i];
+        fprintf(f, "%1.3f\t%d\t%3.2f%%\n", w, st, (float)(st * 100.0 / weight_count));
+    }
+}
+
+void save_weight_stats(network *net, char *filename)
+{
+    fprintf(stderr, "Saving weight into %s\n", filename);
+    FILE *f = fopen(filename, "w");
+    for(int i = 0; i < net->n; ++i){
+        layer l = net->layers[i];    
+        if (l.dontload) continue;
+
+        if(l.type == CONVOLUTIONAL){
+            int num = l.n*l.c*l.size*l.size;
+            fprintf(stderr, "Saving CONV layer %d\n", i);
+            fprintf(f, "Layer CONV %d, total %d\n", i, num);
+            assert(l.weights);
+            save_layer_weight_stats(f, l.weights, num);
+        }
+        if(l.type == CONNECTED){
+            fprintf(stderr, "Saving FC layer %d\n", i);
+            fprintf(f, "Layer FC %d - biases, total %d\n", i, (int)l.outputs);
+            assert(l.biases);
+            save_layer_weight_stats(f, l.biases, l.outputs);
+            fprintf(f, "Layer FC %d - biases\, total %dn", i, (int)l.outputs*l.inputs);
+            assert(l.weights);
+            save_layer_weight_stats(f, l.weights, l.outputs*l.inputs);
+        }
+    }
+    fclose(f);
+}

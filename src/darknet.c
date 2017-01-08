@@ -444,6 +444,13 @@ int main(int argc, char **argv)
         visualize(argv[2], (argc > 3) ? argv[3] : 0);
     } else if (0 == strcmp(argv[1], "imtest")){
         test_resize(argv[2]);
+    } else if (0 == strcmp(argv[1], "weightstats")){
+        char *filename = (argc > 4) ? argv[4]: "stats.txt";
+        char *cfgfile = (argc > 2) ? argv[2]: "net.conf";
+        char *weightfile = (argc > 3) ? argv[3]: "net.weight";
+        network net = parse_network_cfg(cfgfile);
+        load_weights(&net, weightfile);
+        save_weight_stats(&net, filename);
     } else {
         fprintf(stderr, "Not an option: %s\n", argv[1]);
     }
